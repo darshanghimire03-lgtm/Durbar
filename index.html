@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Durbar Notes — Subjects</title>
+<meta name="description" content="Temporary web access to Durbar student notes while the app is being fixed." />
+
+<link rel="icon" type="image/png" href="favicon.png" />
+<link rel="apple-touch-icon" href="favicon.png" />
+
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="bridge-banner">
+  This is a <strong>temporary website</strong> for Durbar students while the app is being fixed — notes only, read-only.
+  <div class="stitch"></div>
+</div>
+
+<header class="site-header">
+  <img src="favicon.png" alt="Durbar app icon" class="app-icon" />
+  <div class="brandblock">
+    <div class="brandname">Durbar Notes</div>
+    <div class="brandsub">A bridge, not a replacement</div>
+  </div>
+</header>
+
+<nav class="crumbs" aria-label="Breadcrumb">
+  <span class="current">Subjects</span>
+</nav>
+
+<section class="page-hero">
+  <div class="eyebrow">Step 1 of 3</div>
+  <h1>Pick a subject</h1>
+  <p class="lede">Choose a subject to see its units, then open a unit to read its notes. Nothing here can be edited or uploaded — it's view-only until the app is back.</p>
+</section>
+
+<div class="search-row">
+  <input
+    type="text"
+    class="search-input"
+    id="subjectSearch"
+    placeholder="Search subjects…"
+    autocomplete="off"
+  />
+</div>
+
+<section class="list-section">
+  <div id="stateBox" class="state-box" style="display:none;">
+    <div class="spinner" id="stateSpinner"></div>
+    <div class="glyph" id="stateGlyph" style="display:none;">—</div>
+    <h2 id="stateTitle">Loading subjects…</h2>
+    <p id="stateBody">Fetching the subject list.</p>
+  </div>
+
+  <div class="card-grid" id="subjectGrid"></div>
+</section>
+
+<footer class="site-footer">
+  Durbar Notes · temporary web bridge · notes are read-only here
+</footer>
+
+<script>
+  const SUBJECTS = ["Economic", "Account", "Computer Science", "English", "Nepali"];
+
+  function sanitizeKey(raw) {
+    return raw.replace(/[.#$\[\]]/g, "_");
+  }
+
+  const grid = document.getElementById("subjectGrid");
+  const searchInput = document.getElementById("subjectSearch");
+
+  function render(list) {
+    grid.innerHTML = "";
+    if (list.length === 0) {
+      grid.innerHTML = `
+        <div class="state-box" style="grid-column:1/-1;">
+          <div class="glyph">—</div>
+          <h2>No subjects match</h2>
+          <p>Try a different search term.</p>
+        </div>`;
+      return;
+    }
+    list.forEach((name, i) => {
+      const a = document.createElement("a");
+      a.className = "item-card";
+      a.href = `unit.html?subject=${encodeURIComponent(name)}&key=${encodeURIComponent(sanitizeKey(name))}`;
+      a.innerHTML = `
+        <span class="idx">${String(i + 1).padStart(2, "0")}</span>
+        <span class="arrow">→</span>
+        <h3>${name}</h3>
+        <div class="meta">View units</div>
+      `;
+      grid.appendChild(a);
+    });
+  }
+
+  render(SUBJECTS);
+
+  searchInput.addEventListener("input", () => {
+    const q = searchInput.value.trim().toLowerCase();
+    const filtered = SUBJECTS.filter(s => s.toLowerCase().includes(q));
+    render(filtered);
+  });
+</script>
+
+</body>
+</html>
