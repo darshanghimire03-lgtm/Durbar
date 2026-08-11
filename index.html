@@ -2,107 +2,181 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Durbar Notes — Subjects</title>
-<meta name="description" content="Temporary web access to Durbar student notes while the app is being fixed." />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Durbar — Home</title>
+<meta name="description" content="Temporary web access to Durbar — For your Higher education." />
 
 <link rel="icon" type="image/png" href="favicon.png" />
 <link rel="apple-touch-icon" href="favicon.png" />
+<meta name="theme-color" content="#0F1B33" />
 
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
 <div class="bridge-banner">
-  This is a <strong>temporary website</strong> for Durbar students while the app is being fixed — notes only, read-only.
+  This is a <strong>temporary website</strong> for Durbar students while the app is being fixed — read-only.
   <div class="stitch"></div>
 </div>
 
-<header class="site-header">
-  <img src="favicon.png" alt="Durbar app icon" class="app-icon" />
+<div class="feed-header">
   <div class="brandblock">
-    <div class="brandname">Durbar Notes</div>
-    <div class="brandsub">A bridge, not a replacement</div>
+    <div class="brandname">Durbar</div>
+    <div class="brandsub">For your Higher education</div>
   </div>
-</header>
-
-<nav class="crumbs" aria-label="Breadcrumb">
-  <span class="current">Subjects</span>
-</nav>
-
-<section class="page-hero">
-  <div class="eyebrow">Step 1 of 3</div>
-  <h1>Pick a subject</h1>
-  <p class="lede">Choose a subject to see its units, then open a unit to read its notes. Nothing here can be edited or uploaded — it's view-only until the app is back.</p>
-</section>
-
-<div class="search-row">
-  <input
-    type="text"
-    class="search-input"
-    id="subjectSearch"
-    placeholder="Search subjects…"
-    autocomplete="off"
-  />
+  <img src="favicon.png" alt="" class="avatar" />
 </div>
 
-<section class="list-section">
-  <div id="stateBox" class="state-box" style="display:none;">
+<section class="list-section" style="margin-top:6px;">
+  <div id="stateBox" class="state-box">
     <div class="spinner" id="stateSpinner"></div>
     <div class="glyph" id="stateGlyph" style="display:none;">—</div>
-    <h2 id="stateTitle">Loading subjects…</h2>
-    <p id="stateBody">Fetching the subject list.</p>
+    <h2 id="stateTitle">Loading feed…</h2>
+    <p id="stateBody">Fetching the latest posts.</p>
   </div>
 
-  <div class="card-grid" id="subjectGrid"></div>
+  <div class="feed-list" id="feedList" style="padding:0; margin-top:0;"></div>
 </section>
 
-<footer class="site-footer">
-  Durbar Notes · temporary web bridge · notes are read-only here
-</footer>
+<nav class="bottom-nav" aria-label="Primary">
+  <div class="nav-row">
+    <a href="index.html" class="active">
+      <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9"/></svg>
+      Home
+    </a>
+    <a href="subjects.html">
+      <svg viewBox="0 0 24 24"><path d="M4 5.5C4 4.67 4.67 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5c0-.83-.67-1.5-1.5-1.5H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5v-13Z"/></svg>
+      Subject
+    </a>
+    <a href="profile.html">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.3-3.5 4.2-5.5 7.5-5.5s6.2 2 7.5 5.5"/></svg>
+      Profile
+    </a>
+  </div>
+</nav>
 
-<script>
-  const SUBJECTS = ["Economic", "Account", "Computer Science", "English", "Nepali"];
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
-  function sanitizeKey(raw) {
-    return raw.replace(/[.#$\[\]]/g, "_");
+  const firebaseConfig = {
+    apiKey: "AIzaSyCumgad3NpIBi94q4MwHpq9kHq4cuuSkoQ",
+    authDomain: "darbarhigh-4c642.firebaseapp.com",
+    databaseURL: "https://darbarhigh-4c642-default-rtdb.firebaseio.com",
+    projectId: "darbarhigh-4c642",
+    storageBucket: "darbarhigh-4c642.firebasestorage.app",
+    messagingSenderId: "451147040929",
+    appId: "1:451147040929:web:c105a00233209c5c05c8e0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const feedList = document.getElementById("feedList");
+  const stateBox = document.getElementById("stateBox");
+  const stateSpinner = document.getElementById("stateSpinner");
+  const stateGlyph = document.getElementById("stateGlyph");
+  const stateTitle = document.getElementById("stateTitle");
+  const stateBody = document.getElementById("stateBody");
+
+  function showState(kind, title, body) {
+    stateBox.style.display = "block";
+    feedList.innerHTML = "";
+    if (kind === "loading") {
+      stateSpinner.style.display = "block";
+      stateGlyph.style.display = "none";
+    } else {
+      stateSpinner.style.display = "none";
+      stateGlyph.style.display = "block";
+      stateGlyph.textContent = kind === "empty" ? "—" : "!";
+    }
+    stateTitle.textContent = title;
+    stateBody.textContent = body;
   }
 
-  const grid = document.getElementById("subjectGrid");
-  const searchInput = document.getElementById("subjectSearch");
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+  }
 
-  function render(list) {
-    grid.innerHTML = "";
-    if (list.length === 0) {
-      grid.innerHTML = `
-        <div class="state-box" style="grid-column:1/-1;">
-          <div class="glyph">—</div>
-          <h2>No subjects match</h2>
-          <p>Try a different search term.</p>
-        </div>`;
+  function timeAgo(ts) {
+    if (!ts) return "";
+    const diff = Date.now() - ts;
+    const day = 86400000;
+    if (diff < 0) return new Date(ts).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    const days = Math.floor(diff / day);
+    if (days < 1) {
+      const hrs = Math.floor(diff / 3600000);
+      if (hrs < 1) {
+        const mins = Math.max(1, Math.floor(diff / 60000));
+        return `${mins} min${mins === 1 ? "" : "s"} ago`;
+      }
+      return `${hrs} hour${hrs === 1 ? "" : "s"} ago`;
+    }
+    if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+    return new Date(ts).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  const badgeSvg = `<span class="post-badge"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>`;
+
+  function render(posts) {
+    feedList.innerHTML = "";
+    if (posts.length === 0) {
+      showState("empty", "No posts yet", "Nothing has been shared yet. Check back soon.");
       return;
     }
-    list.forEach((name, i) => {
-      const a = document.createElement("a");
-      a.className = "item-card";
-      a.href = `unit.html?subject=${encodeURIComponent(name)}&key=${encodeURIComponent(sanitizeKey(name))}`;
-      a.innerHTML = `
-        <span class="idx">${String(i + 1).padStart(2, "0")}</span>
-        <span class="arrow">→</span>
-        <h3>${name}</h3>
-        <div class="meta">View units</div>
+    stateBox.style.display = "none";
+
+    posts.forEach(post => {
+      const card = document.createElement("div");
+      card.className = "post-card";
+
+      const role = (post.role || post.userRole || "student").toLowerCase();
+      const isVerified = role === "professor" || role === "teacher" || role === "admin";
+      const name = post.name || post.authorName || post.author || "Anonymous";
+      const avatar = post.avatarUrl || post.photoUrl || post.userPhoto || "favicon.png";
+      const text = post.text || post.content || post.message || post.body || "";
+      const createdAt = post.createdAt || post.timestamp || post.postedAt || 0;
+      const subject = post.subject || post.subjectName || "";
+
+      card.innerHTML = `
+        <div class="post-head">
+          <img class="post-avatar" src="${escapeHtml(avatar)}" alt="" onerror="this.src='favicon.png'" />
+          <div class="post-who">
+            <div class="post-name-row">
+              <span class="post-name">${escapeHtml(name)}</span>
+              ${isVerified ? badgeSvg : ""}
+            </div>
+            <div class="post-role role-${role === "professor" || role === "teacher" ? "professor" : "student"}">${escapeHtml(role)}</div>
+          </div>
+          <div class="post-time">${timeAgo(createdAt)}</div>
+        </div>
+        ${text ? `<div class="post-body">${escapeHtml(text)}</div>` : ""}
+        ${subject ? `<span class="post-subject-tag">${escapeHtml(subject)}</span>` : ""}
       `;
-      grid.appendChild(a);
+      feedList.appendChild(card);
     });
   }
 
-  render(SUBJECTS);
+  async function loadFeed() {
+    showState("loading", "Loading feed…", "Fetching the latest posts.");
+    try {
+      const snap = await get(ref(db, "posts"));
+      const val = snap.val();
+      if (!val) {
+        render([]);
+        return;
+      }
+      const posts = Object.keys(val).map(id => ({ id, ...val[id] }));
+      posts.sort((a, b) => (b.createdAt || b.timestamp || 0) - (a.createdAt || a.timestamp || 0));
+      render(posts);
+    } catch (err) {
+      showState("error", "Couldn't load feed", err && err.message ? err.message : "Something went wrong while reading from the database.");
+    }
+  }
 
-  searchInput.addEventListener("input", () => {
-    const q = searchInput.value.trim().toLowerCase();
-    const filtered = SUBJECTS.filter(s => s.toLowerCase().includes(q));
-    render(filtered);
-  });
+  loadFeed();
 </script>
 
 </body>
